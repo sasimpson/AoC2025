@@ -18,10 +18,11 @@ type Dial struct {
 	Position int
 	Size     int
 	Moves    []*Move
+	Zeros    int
 }
 
 func (d *Dial) String() string {
-	return fmt.Sprintf("pos: %d, moves: %d", d.Position, len(d.Moves))
+	return fmt.Sprintf("pos: %d, moves: %d, zeros: %d", d.Position, len(d.Moves), d.Zeros)
 }
 
 func (d *Dial) IsZero() bool {
@@ -33,19 +34,18 @@ func (d *Dial) Move(m *Move) {
 
 	switch m.Direction {
 	case "R":
+		d.Zeros += (d.Position + m.Distance) / d.Size
 		d.Position = (d.Position + m.Distance) % d.Size
-		// d.Position += m.Distance
-		// if d.Position >= d.Size {
-		// 	d.Position -= d.Size
-		// }
 	case "L":
-		d.Position = (d.Size + d.Position - m.Distance) % d.Size
-		// d.Position -= m.Distance
-		// if d.Position < 0 {
-		// 	d.Position += d.Size
-		// }
+		if m.Distance >= d.Position {
+			if d.Position > 0 {
+				d.Zeros += 1 + (m.Distance-d.Position)/d.Size
+			} else {
+				d.Zeros += m.Distance / d.Size
+			}
+		}
+		d.Position = ((d.Position-m.Distance)%d.Size + d.Size) % d.Size
 	}
-
 }
 
 func ParseMove(input string) (*Move, error) {
@@ -65,7 +65,7 @@ func (m Move) String() string {
 
 func main() {
 	var dial = &Dial{Position: 50, Size: 100}
-	var counter = 0
+	// var counter = 0
 
 	fp, err := os.Open("cmd/day1/data/input.txt")
 	if err != nil {
@@ -86,10 +86,8 @@ func main() {
 		}
 		dial.Move(m)
 		fmt.Println(m, dial)
-		if dial.IsZero() {
-			counter++
-		}
+
 	}
 
-	fmt.Println("number of zeros", counter)
+	fmt.Println("number of zeros", dial.Zeros)
 }
