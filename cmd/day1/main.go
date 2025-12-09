@@ -71,6 +71,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer fp.Close()
 
 	reader := bufio.NewReader(fp)
 
