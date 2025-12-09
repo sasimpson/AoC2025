@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -17,6 +18,21 @@ type Group struct {
 
 func (g *Group) String() string {
 	return fmt.Sprintf("%d-%d", g.Start, g.End)
+}
+
+func (g *Group) Invalid() []int {
+	var invalids []int
+	if g.Start > g.End {
+		return []int{}
+	}
+
+	for i := g.Start; i <= g.End; i++ {
+		x := strconv.Itoa(i)
+		if len(x)%2 == 0 && (x[:len(x)/2] == x[len(x)/2:]) {
+			invalids = append(invalids, i)
+		}
+	}
+	return invalids
 }
 
 func NewGroup(raw string) *Group {
@@ -36,19 +52,32 @@ func NewGroup(raw string) *Group {
 }
 
 func main() {
-	fp, err := os.Open("cmd/day2/data/sample.txt")
+	fp, err := os.Open("cmd/day2/data/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer fp.Close()
 
 	reader := bufio.NewReader(fp)
+	var groups []*Group
+
 	for {
 		groupStr, err := reader.ReadString(',')
 		if err != nil {
+			if err == io.EOF {
+				groups = append(groups, NewGroup(groupStr))
+			}
 			break
 		}
-		group := NewGroup(strings.TrimSuffix(groupStr, ","))
-		fmt.Println(group)
+		groups = append(groups, NewGroup(strings.TrimSuffix(groupStr, ",")))
 	}
+
+	var groupSum int
+	for _, group := range groups {
+		fmt.Println(group, group.Invalid())
+		for _, i := range group.Invalid() {
+			groupSum += i
+		}
+	}
+	fmt.Println("sum of invalid ids", groupSum)
 }
